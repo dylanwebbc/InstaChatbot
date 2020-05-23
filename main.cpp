@@ -12,15 +12,23 @@
 
 using namespace std;
 
-string refineText(const string text); //formats input to match text
-void jsonToTxt (const string name); //converts .json file to .txt file and populates a vector for later mapping
-vector<string> parseConvo(string inputText); //searches convo for similar text
-void generateResponse(const vector<string> sampleText, const string inputText); //creates a random response using maps and initial words
-bool existsTest(const string& name); //checks if a file exists
-vector<string> stringToVector(const string text); //converts string to a vector
-bool nameInFile(const string name); //checks if username is in a file
+//formats input to match text
+string refineText(const string text);
+//converts .json file to .txt file and populates a vector for later mapping
+void jsonToTxt (const string name);
+//searches convo for similar text
+vector<string> parseConvo(string input);
+//creates a random response using maps and initial words
+void generateResponse(const vector<string> sampleText);
+//checks if a file exists
+bool existsTest(const string& name);
+//converts string to a vector
+vector<string> stringToVector(const string text);
+//checks if username is in a file
+bool nameInFile(const string name); 
 
 vector<string> wordvect; //vector used to store all text in lines
+string inputText; //string of concatonated text from parseConvo
 
 int main(int argc, char** argv) {
   //generate txt files for the given username
@@ -76,7 +84,7 @@ int main(int argc, char** argv) {
     if (input != "quit") {
       input = refineText(input);
       vector<string> inputVect = parseConvo(input);
-      generateResponse(inputVect, input);
+      generateResponse(inputVect);
     }
   }
   return 0;
@@ -215,6 +223,9 @@ void jsonToTxt (const string name) {
         else if (isalpha(word.at(i))) { //remove all punctuation
           newWord.push_back(tolower(word.at(i)));
         }
+        else if (isdigit(word.at(i))) {
+          newWord.push_back(word.at(i));
+        }
       }
       text.push_back(newWord);
       ++count;
@@ -268,7 +279,7 @@ void jsonToTxt (const string name) {
   fout.close(); //close file
 }
 
-vector<string> parseConvo(string inputText) {
+vector<string> parseConvo(string input) {
   int lineNum = 0;
   string line;
   string lastLine;
@@ -280,13 +291,13 @@ vector<string> parseConvo(string inputText) {
   bool found = false;
 
   //create vector of position of spaces
-  for (int i = 0; i < inputText.length(); ++i) {
-    if (inputText.at(i) == ' ') {
+  for (int i = 0; i < input.length(); ++i) {
+    if (input.at(i) == ' ') {
       wordPos.push_back(i);
     }
   }
 
-  //subtract a word from the inputText until match found in convo
+  //subtract a word from the input text until match found in convo
   for (int i = wordPos.size() - 1; i > -2; --i) {
 
     ifstream fin; //opens designated file
@@ -297,7 +308,9 @@ vector<string> parseConvo(string inputText) {
       while (getline(fin, line)) {
         lineNum++;
         lines.push_back(line);
-        if (line == inputText && lastLine.size() <= 12*sqrt(inputText.size()) && inputText.length() > 0) {
+        if (line == input 
+        && lastLine.size() <= 12*sqrt(input.size()) 
+        && input.length() > 0) {
           matches.push_back(lastLine);
           found = true;
         }
@@ -310,11 +323,11 @@ vector<string> parseConvo(string inputText) {
     }
     else {
       //loop to find a line which contains input or most of it
-      while (getline(fin, line) && inputText.length() > 0) {
+      while (getline(fin, line) && input.length() > 0) {
         //looks for input in line
-        if (line.find(inputText) != std::string::npos 
-        && line.size() <= 10*sqrt(inputText.size())
-        && lastLine.size() <= 14*sqrt(inputText.size())) {
+        if (line.find(input) != std::string::npos 
+        && line.size() <= 10*sqrt(input.size())
+        && lastLine.size() <= 14*sqrt(input.size())) {
           matches.push_back(lastLine);
           found = true;
         }
@@ -333,11 +346,12 @@ vector<string> parseConvo(string inputText) {
       int index = rand() % matches.size();
       string text = matches.at(index);
       output = stringToVector(text);
+      inputText = input;
       return output;
     }
     else { //if match not found, remove last word and retry
       if (i > -1) {
-        inputText = inputText.substr(0, (wordPos.at(i)));
+        input = input.substr(0, (wordPos.at(i)));
       }
     }
   }
@@ -346,10 +360,11 @@ vector<string> parseConvo(string inputText) {
   srand(time(NULL));
   int randLine = rand() % lineNum;
   output = stringToVector(lines[randLine]);
+  inputText = input;
   return output;
 }
 
-void generateResponse(const vector<string> sampleText, const string inputText) {
+void generateResponse(const vector<string> sampleText) {
   map<vector<string>, vector<string> > wordmap;
   vector<string> state;
   vector<string> addList;
@@ -399,7 +414,7 @@ void generateResponse(const vector<string> sampleText, const string inputText) {
     "was", "is", "are", "will", "be", "were", "like", "likes",
     "liked", "how", "where", "when", "who", "your", "youre", 
     "their", "theyre", "theyd", "theyll", "hes", "hed", "hell",
-    "shes", "shed", "shell", "its", "itd", "itll",
+    "shes", "shed", "shell", "its", "itd", "itll", "about",
     "thats", "thatd", "thatll", "wed", "well", "id", "ill", "am" };
     if (i == 9) { //extends sentence if word incomplete
       for (int j = 0; j < addList.size(); ++j) {
