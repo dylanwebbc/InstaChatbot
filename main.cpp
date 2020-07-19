@@ -16,6 +16,8 @@ using namespace std;
 string refineText(const string text);
 //converts .json file to .txt file and populates a vector for later mapping
 void jsonToTxt (const string name);
+//orders vector of text chronologically
+vector<string> orderText(vector<string> text);
 //searches convo for similar text
 vector<string> parseConvo(string input);
 //creates a random response using maps and initial words
@@ -148,6 +150,9 @@ string refineText(const string text) {
     if (isalpha(text.at(i))) {
       newText.push_back(tolower(text.at(i)));
     }
+    else if (isdigit(text.at(i)) || text.at(i) == '%') {
+        newText.push_back(text.at(i));
+      }
   }
   //adds an extra space at the end if there isn't one already
   if (newText != "") {
@@ -160,7 +165,7 @@ string refineText(const string text) {
 
 void jsonToTxt (const string name) {
   vector<string> text;
-  vector<string> mapText;
+  vector<string> tempText = {"/"};
   string word;
   string username = "\"" + name + "\",";
 
@@ -168,6 +173,8 @@ void jsonToTxt (const string name) {
   bool process = false;
   bool first = false;
   bool user = false;
+  bool userSpoke = false;
+  bool appendText = false;
   
   vector<int> Q;
   vector<int> A;
@@ -182,11 +189,8 @@ void jsonToTxt (const string name) {
   //populates set with text
   while (fin >> word) {
     
-    /*if (count > 80000) { //40000 seems to work well here
-      break;
-    }*/
-    
-    if (word == "\"likes\":") { //skip over liked messages
+    if (word == "\"likes\":" || word == "\"media\":" 
+    || word == "\"link\":" ) { //skip over liked messages and media
       scan = false;
     }
     else if (word == "\"date\":") { //stop skipping
@@ -194,27 +198,55 @@ void jsonToTxt (const string name) {
     }
     else if (word == "{\"participants\":") {
       //add a blank response to divide conversations
+      tempText.push_back("/");
+      vector<string> orderedText = orderText(tempText);
+      for (int i = 0; i < orderedText.size(); ++i) {
+        text.push_back(orderedText.at(i));
+      }
+      tempText.clear();
+      text.push_back("");
       Q.push_back(count);
       ++count;
-      text.push_back("");
+      
     }
 
     //adds words to text and processes them
-    if (process && word.substr(0,5) != "\"http" 
-    && word.substr(0,4) != "http") {
+    if (process) {
       string newWord = "";
       if (first) { //remove extra bracket and designate speaker
         word.erase(0, 1);
+        tempText.push_back("/");
         //add a Q or A depending on speaker and which bot is created
         if (user) {
           A.push_back(count);
+          if (!userSpoke) { //boolean tracks who spoke last
+            appendText = true;
+            userSpoke = true;
+          }
         }
         else {
           Q.push_back(count);
+          if (userSpoke) {
+            appendText = true;
+            userSpoke = false;
+          }
         }
         first = false;
       }
-      //loop to add words to text
+
+      //loop to rearrange tempText in chronological order
+      //and append tempText to text
+      if (appendText) {
+        vector<string> orderedText = orderText(tempText);
+        for (int i = 0; i < orderedText.size(); ++i) {
+          text.push_back(orderedText.at(i));
+        }
+        tempText.clear();
+        tempText.push_back("/");
+        appendText = false;
+      }
+
+      //loop to add words to tempText
       for (int i = 0; i < word.size(); ++i) {
         if (word.at(i) == '}') { // if close bracket stop adding
           process = false;
@@ -223,12 +255,16 @@ void jsonToTxt (const string name) {
         else if (isalpha(word.at(i))) { //remove all punctuation
           newWord.push_back(tolower(word.at(i)));
         }
-        else if (isdigit(word.at(i))) {
+        else if (isdigit(word.at(i)) || word.at(i) == '%') {
           newWord.push_back(word.at(i));
         }
       }
-      text.push_back(newWord);
-      ++count;
+      //removes hyperlinks from text
+      if (word.substr(0,5) != "\"http" 
+      && word.substr(0,4) != "http") {
+        tempText.push_back(newWord);
+        ++count;
+      }
     }
 
     //scans for words to add to text
@@ -241,6 +277,12 @@ void jsonToTxt (const string name) {
         process = true;
         first = true;
       }
+    }
+  }
+  //adds final lines unsorted
+  for (int i = 0; i < tempText.size(); ++i) {
+    if (tempText.at(i) != "/") {
+      text.push_back(tempText.at(i));
     }
   }
   fin.close(); //close the file
@@ -277,6 +319,22 @@ void jsonToTxt (const string name) {
     }
   }
   fout.close(); //close file
+}
+
+vector<string> orderText(vector<string> text) {
+  //loops backward until new line symbol / and then forward
+  vector<string> orderedText;
+  text.pop_back();
+  int endline = text.size();
+  for (int i = text.size() - 1; i >= 0; --i) {
+    if (text.at(i) == "/") {
+      for (int j = i + 1; j < endline; ++j) {
+        orderedText.push_back(text.at(j)); //adds words to text
+      }
+      endline = i;
+    }
+  }
+  return orderedText;
 }
 
 vector<string> parseConvo(string input) {
@@ -403,7 +461,7 @@ void generateResponse(const vector<string> sampleText) {
 
   //prints the wordmap
   cout << "A: ";
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < ((M * M) + 1); ++i) {
     int ind = rand() % wordmap[state].size();
     cout << wordmap[state][ind] << " ";
 
@@ -411,12 +469,12 @@ void generateResponse(const vector<string> sampleText) {
     addList = {"the", "a", "an", "and", "but", "for", "or", "so",
     "i", "im", "to", "too", "above", "around", "at", "before", "by",
     "from", "in", "into", "of", "on", "to", "with", "what", "whats",
-    "was", "is", "are", "will", "be", "were", "like", "likes",
-    "liked", "how", "where", "when", "who", "your", "youre", 
+    "was", "is", "are", "will", "be", "were", "like", "likes", "my",
+    "liked", "how", "howd", "where", "when", "who", "your", "youre", 
     "their", "theyre", "theyd", "theyll", "hes", "hed", "hell",
-    "shes", "shed", "shell", "its", "itd", "itll", "about",
+    "shes", "shed", "shell", "its", "itd", "itll", "about", "arent",
     "thats", "thatd", "thatll", "wed", "well", "id", "ill", "am" };
-    if (i == 9) { //extends sentence if word incomplete
+    if (i == (M * M)) { //extends sentence if word incomplete
       for (int j = 0; j < addList.size(); ++j) {
         if (wordmap[state][ind] == addList.at(j)) {
           i--;
