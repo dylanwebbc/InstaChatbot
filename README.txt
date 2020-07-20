@@ -8,6 +8,8 @@ V 1.2 -- 7/18/2020
   fixed order of text by same speaker to be chronological
   fixed hyperlinks ending messages appearing in convo.txt
   output length now depends on output accuracy
+V 1.3 -- 7/19/2020
+  added support for Mac
 
 PURPOSE AND METHOD
 

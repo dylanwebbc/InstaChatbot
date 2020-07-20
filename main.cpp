@@ -1,6 +1,6 @@
 //Insta Chatbot
 //Written by Dylan Webb 
-//Version 1 -- 5/22/2020
+//Version 1.3 -- 7/19/2020
 
 #include <iostream>
 #include <fstream>
@@ -14,7 +14,7 @@ using namespace std;
 
 //formats input to match text
 string refineText(const string text);
-//converts .json file to .txt file and populates a vector for later mapping
+//converts .json file to .txt file and populates a vector for mapping
 void jsonToTxt (const string name);
 //orders vector of text chronologically
 vector<string> orderText(vector<string> text);
@@ -38,9 +38,9 @@ int main(int argc, char** argv) {
   
   //checks that necessary files exist and runs setup
   if (!existsTest("convo.txt")) {
+    cout << "------First time setup------" << endl;
     if (argc == 1) {
-      cout << "------First time setup------" << endl <<
-      "Enter your instagram username" << endl << " : ";
+      cout << "Enter your instagram username" << endl << " : ";
       getline(cin, input);
       if (!nameInFile(input)) {
         cout << "Error: username not found" << endl;
@@ -446,7 +446,7 @@ void generateResponse(const vector<string> sampleText) {
     wordvect.insert(wordvect.begin(), sampleText.at(i));
   }
 
-  //creates a map of associated words connected to other associated words
+  //creates a map of associated words
   for (vector<string>::iterator it = wordvect.begin(); it != 
   wordvect.end(); it++) {
     wordmap[state].push_back(*it);
@@ -472,8 +472,9 @@ void generateResponse(const vector<string> sampleText) {
     "was", "is", "are", "will", "be", "were", "like", "likes", "my",
     "liked", "how", "howd", "where", "when", "who", "your", "youre", 
     "their", "theyre", "theyd", "theyll", "hes", "hed", "hell",
-    "shes", "shed", "shell", "its", "itd", "itll", "about", "arent",
-    "thats", "thatd", "thatll", "wed", "well", "id", "ill", "am" };
+    "shes", "shed", "shell", "its", "itd", "itll", "about",
+    "thats", "thatd", "thatll", "wed", "well", "id", "ill", "am",
+    "arent", "dont", "wont", "cant", "do", "didnt", "wouldnt"};
     if (i == (M * M)) { //extends sentence if word incomplete
       for (int j = 0; j < addList.size(); ++j) {
         if (wordmap[state][ind] == addList.at(j)) {
