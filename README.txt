@@ -20,9 +20,10 @@ The program relies on the user's log of direct messages, or DMs, for the databas
 INSTRUCTIONS FOR USE
 
 InstaChatbot.exe and main.cpp are included
-Download InstaChatbot.exe or compile main.cpp and place it in a folder on your computer
+Download InstaChatbot.exe or compile main.cpp and place it in a folder on your computer (Xcode is suggested to compile on Mac)
 Request your data from instagram and locate the messages.json file in the folder you are sent
-Place the messages.json file in the same folder as the InstaChatbot.exe program
+FOR PC: Place the messages.json file in the same folder as the InstaChatbot.exe program
+FOR MAC: Place the messages.json file in the Home folder (current user directory)
 
 Run the program, and enter your instagram username (this only occurs on first time setup, which will take a little longer)
 This will not in any way affect your account--it is just necessary for parsing the conversation and separating the user's messages and others' replies
