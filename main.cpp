@@ -1,6 +1,6 @@
 //Insta Chatbot
 //Written by Dylan Webb 
-//Version 1.3 -- 7/19/2020
+//Version 1.3 -- 7/20/2020
 
 #include <iostream>
 #include <fstream>
@@ -31,6 +31,7 @@ bool nameInFile(const string name);
 
 vector<string> wordvect; //vector used to store all text in lines
 string inputText; //string of concatonated text from parseConvo
+vector<string> addList; //vector of words which can't end a sentence
 
 int main(int argc, char** argv) {
   //generate txt files for the given username
@@ -70,6 +71,10 @@ int main(int argc, char** argv) {
   }
   cout << "Type \"quit\" to exit the program" << endl;
 
+  //create list of words which can't finish a sentence
+  string addString = "the a an and but for or so i im to too above around at before by from in into of on to with what whats was is are will be were like likes my liked how howd where when who your youre their theyre theyd theyll hes hed hell shes shed shell its itd itll about thats thatd thatll wed well id ill am arent dont wont cant do didnt wouldnt";
+  addList = stringToVector(addString);
+
   //copies user text into a vector
   string word;
   ifstream fin;
@@ -103,7 +108,7 @@ bool nameInFile(const string name) {
       return true;
     }
   }
-return false;
+  return false;
 }
 
 vector<string> stringToVector(const string text) {
@@ -165,7 +170,8 @@ string refineText(const string text) {
 
 void jsonToTxt (const string name) {
   vector<string> text;
-  vector<string> tempText = {"/"};
+  vector<string> tempText;
+  tempText.push_back("/");
   string word;
   string username = "\"" + name + "\",";
 
@@ -425,7 +431,6 @@ vector<string> parseConvo(string input) {
 void generateResponse(const vector<string> sampleText) {
   map<vector<string>, vector<string> > wordmap;
   vector<string> state;
-  vector<string> addList;
   srand(time(NULL));
   int M;
   
@@ -465,16 +470,6 @@ void generateResponse(const vector<string> sampleText) {
     int ind = rand() % wordmap[state].size();
     cout << wordmap[state][ind] << " ";
 
-    //list of words which can't finish a sentence
-    addList = {"the", "a", "an", "and", "but", "for", "or", "so",
-    "i", "im", "to", "too", "above", "around", "at", "before", "by",
-    "from", "in", "into", "of", "on", "to", "with", "what", "whats",
-    "was", "is", "are", "will", "be", "were", "like", "likes", "my",
-    "liked", "how", "howd", "where", "when", "who", "your", "youre", 
-    "their", "theyre", "theyd", "theyll", "hes", "hed", "hell",
-    "shes", "shed", "shell", "its", "itd", "itll", "about",
-    "thats", "thatd", "thatll", "wed", "well", "id", "ill", "am",
-    "arent", "dont", "wont", "cant", "do", "didnt", "wouldnt"};
     if (i == (M * M)) { //extends sentence if word incomplete
       for (int j = 0; j < addList.size(); ++j) {
         if (wordmap[state][ind] == addList.at(j)) {
