@@ -37,9 +37,14 @@ int main(int argc, char** argv) {
   //generate txt files for the given username
   string input;
   
-  //checks that necessary files exist and runs setup
+  //checks that necessary files exist and runs first time setup
   if (!existsTest("convo.txt")) {
     cout << "------First time setup------" << endl;
+    if (!existsTest("messages.json")) {
+      cout << "Error: messages.json file missing" << endl;
+      getline(cin, input);
+      return 0;
+    }
     if (argc == 1) {
       cout << "Enter your instagram username" << endl << " : ";
       getline(cin, input);
@@ -57,17 +62,9 @@ int main(int argc, char** argv) {
       getline(cin, input);
       return 0;
     }
-
-    if (!existsTest("messages.json")) {
-      cout << "Error: messages.json file missing" << endl;
-      getline(cin, input);
-      return 0;
-    }
-    else {
-      cout << "Creating necessary files..." << endl;
-      cout << "Generating chatbot..." << endl;
-      jsonToTxt(input);
-    }
+    cout << "Creating necessary files..." << endl;
+    cout << "Generating chatbot..." << endl;
+    jsonToTxt(input);
   }
   cout << "Type \"quit\" to exit the program" << endl;
 
